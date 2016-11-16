@@ -116,6 +116,7 @@ static struct {
     { "kill", cmd_kill, usage_kill },
     { "list", cmd_list, usage_list },
     { "rate", cmd_rate, usage_rate },
+    { "setgroup", cmd_setgroup, usage_setgroup },
     { "start", cmd_start, usage_start },
     { "stop", cmd_stop, usage_stop },
     { "stat", cmd_stat, usage_stat }

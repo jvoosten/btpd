@@ -26,14 +26,14 @@
 #include <strings.h>
 #include <unistd.h>
 
-#include <benc.h>
+#include "benc.h"
 #define DAEMON
-#include <btpd_if.h>
+#include "btpd_if.h"
 #undef DAEMON
-#include <evloop.h>
-#include <metainfo.h>
-#include <queue.h>
-#include <subr.h>
+#include "evloop.h"
+#include "metainfo.h"
+#include "queue.h"
+#include "subr.h"
 
 #include "active.h"
 #include "hashtable.h"
@@ -42,6 +42,7 @@
 #include "net.h"
 #include "peer.h"
 #include "tlib.h"
+#include "group.h"
 #include "torrent.h"
 #include "download.h"
 #include "upload.h"

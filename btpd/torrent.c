@@ -4,8 +4,8 @@
 
 #define SAVE_INTERVAL 300
 
-static unsigned m_nghosts;
-static unsigned m_ntorrents;
+static unsigned m_nghosts = 0;
+static unsigned m_ntorrents = 0;
 static struct torrent_tq m_torrents = BTPDQ_HEAD_INITIALIZER(m_torrents);
 
 static unsigned m_tsave;
@@ -130,8 +130,11 @@ torrent_start(struct tlib *tl)
     tp->npieces = mi_npieces(mi);
     tp->pieces_off =
         benc_dget_mem(benc_dget_dct(mi, "info"), "pieces", NULL) - mi;
+    // Search matching group... if the groupname does not exist, the torrent is automatically
+    // added to the 'root' group
+    tp->group = group_by_ref (tl->group);
 
-    btpd_log(BTPD_L_BTPD, "Starting torrent '%s'.\n", torrent_name(tp));
+    btpd_log(BTPD_L_BTPD, "Starting torrent '%s' in group '%s'.\n", torrent_name(tp), group_name (tp->group));
     tr_create(tp, mi);
     tl->tp = tp;
     net_create(tp);

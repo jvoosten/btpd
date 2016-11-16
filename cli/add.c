@@ -6,7 +6,7 @@ usage_add(void)
     printf(
         "Add torrents to btpd.\n"
         "\n"
-        "Usage: add [-n name] [-T] [-N] -d dir file(s)\n"
+        "Usage: add [-n name] [-T] [-N] [-g group] -d dir file(s)\n"
         "\n"
         "Arguments:\n"
         "file\n"
@@ -28,6 +28,9 @@ usage_add(void)
         "--topdir, -T\n"
         "\tAppend the torrent top directory (if any) to the content path.\n"
         "\n"
+        "--group, -g\n"
+        "\tPut this torrent into a group.\n"
+        "\n"
         );
     exit(1);
 }
@@ -36,6 +39,7 @@ static struct option add_opts [] = {
     { "help", no_argument, NULL, 'H' },
     { "nostart", no_argument, NULL, 'N'},
     { "topdir", no_argument, NULL, 'T'},
+    { "group", required_argument, NULL, 'g' },
     {NULL, 0, NULL, 0}
 };
 
@@ -44,9 +48,9 @@ cmd_add(int argc, char **argv)
 {
     int ch, topdir = 0, start = 1, nfile, nloaded = 0;
     size_t dirlen = 0, labellen = 0;
-    char *dir = NULL, *name = NULL, *glabel = NULL, *label;
+    char *dir = NULL, *name = NULL, *glabel = NULL, *label, *group = NULL;
 
-    while ((ch = getopt_long(argc, argv, "NTd:l:n:", add_opts, NULL)) != -1) {
+    while ((ch = getopt_long(argc, argv, "NTd:l:n:g:", add_opts, NULL)) != -1) {
         switch (ch) {
         case 'N':
             start = 0;
@@ -67,6 +71,9 @@ cmd_add(int argc, char **argv)
         case 'n':
             name = optarg;
             break;
+        case 'g':
+          group = optarg;
+          break;
         default:
             usage_add();
         }
@@ -108,7 +115,7 @@ cmd_add(int argc, char **argv)
           label = benc_dget_str(mi, "announce", NULL);
        else
           label = glabel;
-       code = btpd_add(ipc, mi, mi_size, dpath, name, label);
+       code = btpd_add(ipc, mi, mi_size, dpath, name, label, group);
        if ((code == IPC_OK) && start) {
            struct ipc_torrent tspec;
            tspec.by_hash = 1;

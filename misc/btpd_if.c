@@ -264,7 +264,7 @@ btpd_tget_wc(struct ipc *ipc, enum ipc_twc twc, enum ipc_tval *keys,
 
 enum ipc_err
 btpd_add(struct ipc *ipc, const char *mi, size_t mi_size, const char *content,
-    const char *name, const char *label)
+    const char *name, const char *label, const char *group)
 {
     struct iobuf iob = iobuf_init(1 << 10);
     iobuf_print(&iob, "l3:addd7:content%d:%s", (int)strlen(content),
@@ -273,6 +273,8 @@ btpd_add(struct ipc *ipc, const char *mi, size_t mi_size, const char *content,
         iobuf_print(&iob, "4:name%d:%s", (int)strlen(name), name);
     if (label != NULL)
         iobuf_print(&iob, "5:label%d:%s", (int)strlen(label), label);
+    if (group != NULL)
+      iobuf_print (&iob, "5:group%d:%s", (int)strlen(group), group);
     iobuf_print(&iob, "7:torrent%lu:", (unsigned long)mi_size);
     iobuf_write(&iob, mi, mi_size);
     iobuf_swrite(&iob, "ee");
@@ -331,5 +333,29 @@ btpd_stop_all(struct ipc *ipc)
 {
     struct iobuf iob = iobuf_init(16);
     iobuf_swrite(&iob, "l8:stop-alle");
+    return ipc_buf_req_code(ipc, &iob);
+}
+
+
+/* Construct benc command to place a torrent in a group */
+enum ipc_err
+btpd_setgroup(struct ipc *ipc, struct ipc_torrent *tp, const char *group)
+{
+    struct iobuf iob = iobuf_init(1 << 10);
+
+    iobuf_print(&iob, "l8:setgroup"); // start list, command
+    iobuf_print(&iob, "d"); // start list
+    if (group != NULL) {
+        iobuf_print(&iob, "5:group%d:%s", (int)strlen(group), group); // groupname
+    }
+    if (tp->by_hash) {
+      iobuf_print(&iob, "7:torrent20:"); // hash value
+      iobuf_write(&iob, tp->u.hash, 20);
+    }
+    else {
+      iobuf_print(&iob, "7:torrenti%ue", tp->u.num); // integer number
+    }
+    iobuf_swrite(&iob, "ee"); // end list, end list
+
     return ipc_buf_req_code(ipc, &iob);
 }

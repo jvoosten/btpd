@@ -21,6 +21,7 @@ struct torrent {
     struct content *cm;
     struct trackers *tr;
     struct net *net;
+    struct group *group;
 
     off_t total_length;
     off_t piece_length;

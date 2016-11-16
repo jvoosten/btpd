@@ -53,6 +53,8 @@ tlib_kill(struct tlib *tl)
         free(tl->dir);
     if (tl->label != NULL)
         free(tl->label);
+    if (tl->group != NULL)
+        free((void *)tl->group);
     free(tl);
     m_ntlibs--;
 }
@@ -170,10 +172,16 @@ load_info(struct tlib *tl, const char *path)
     tl->name = benc_dget_str(info, "name", NULL);
     tl->label = benc_dget_str(info, "label", NULL);
     tl->dir = benc_dget_str(info, "dir", NULL);
+    tl->group = benc_dget_str(info ,"group", NULL);
     tl->tot_up = benc_dget_int(info, "total upload");
     tl->tot_down = benc_dget_int(info, "total download");
     tl->content_size = benc_dget_int(info, "content size");
     tl->content_have = benc_dget_int(info, "content have");
+    // Silently upgrade torrent file with group
+    if (NULL == tl->group)
+    {
+      tl->group = strdup ("");
+    }
     if (tl->name == NULL || tl->dir == NULL)
         btpd_err("Out of memory.\n");
 }
@@ -188,12 +196,14 @@ save_info(struct tlib *tl)
     iobuf_print(&iob,
         "d4:infod"
         "12:content havei%llde12:content sizei%llde"
-        "3:dir%d:%s4:name%d:%s"
+        "3:dir%d:%s5:group%d:%s4:name%d:%s"
         "5:label%d:%s"
         "14:total downloadi%llde12:total uploadi%llde"
         "ee",
         (long long)tl->content_have, (long long)tl->content_size,
-        (int)strlen(tl->dir), tl->dir, (int)strlen(tl->name), tl->name,
+        (int)strlen(tl->dir), tl->dir,
+        (int)strlen(tl->group), tl->group,
+        (int)strlen(tl->name), tl->name,
         (int)strlen(tl->label), tl->label,
         tl->tot_down, tl->tot_up);
     if (iob.error)
@@ -250,7 +260,7 @@ err:
 
 struct tlib *
 tlib_add(const uint8_t *hash, const char *mi, size_t mi_size,
-    const char *content, char *name, char *label)
+    const char *content, char *name, char *label, const char *group)
 {
     struct tlib *tl = tlib_create(hash);
     char relpath[RELPATH_SIZE], file[PATH_MAX];
@@ -263,6 +273,7 @@ tlib_add(const uint8_t *hash, const char *mi, size_t mi_size,
     tl->content_size = mi_total_length(mi);
     tl->name = name;
     tl->label = label;
+    tl->group = group;
     tl->dir = strdup(content);
     if (tl->name == NULL || tl->dir == NULL)
         btpd_err("out of memory.\n");
@@ -278,16 +289,26 @@ tlib_add(const uint8_t *hash, const char *mi, size_t mi_size,
 
 struct tlib *
 tlib_readd(struct tlib *tl, const uint8_t *hash, const char *mi,
-    size_t mi_size, const char *content, char *name, char *label)
+    size_t mi_size, const char *content, char *name, char *label, const char *group)
 {
     struct tlib *tln;
     struct torrent *tp = tl->tp;
     tp->delete = 0;
     tlib_kill(tl);
-    tln = tlib_add(hash, mi, mi_size, content, name, label);
+    tln = tlib_add(hash, mi, mi_size, content, name, label, group);
     tln->tp = tp;
     return tln;
 }
+
+/* Put torrent in new group */
+struct tlib *tlib_setgroup (struct tlib *tl, const char *group)
+{
+  free ((void *) tl->group);
+  tl->group = group;
+  save_info (tl);
+  return tl;
+}
+
 
 static int
 num_test(const void *k1, const void *k2)

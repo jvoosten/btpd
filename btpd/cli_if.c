@@ -243,7 +243,7 @@ cmd_add(struct cli *cli, int argc, const char *args)
 
     struct tlib *tl;
     size_t mi_size = 0, csize = 0;
-    const char *mi, *cp;
+    const char *mi, *cp, *group;
     char content[PATH_MAX];
     uint8_t hash[20];
 
@@ -262,17 +262,31 @@ cmd_add(struct cli *cli, int argc, const char *args)
     bcopy(cp, content, csize);
     content[csize] = '\0';
 
+    // See if there is a group and if it exists
+    group = benc_dget_str (args, "group", NULL);
+    if (NULL == group)
+    {
+      group = strdup ("");
+    }
+    else
+    {
+      if (NULL == group_by_name (group))
+      {
+        return write_code_buffer (cli, IPC_ENOGROUP);
+      }
+    }
+
     tl = tlib_by_hash(mi_info_hash(mi, hash));
     if (tl != NULL && !torrent_haunting(tl))
         return write_code_buffer(cli, IPC_ETENTEXIST);
     if (tl != NULL) {
         tl = tlib_readd(tl, hash, mi, mi_size, content,
             benc_dget_str(args, "name", NULL),
-            benc_dget_str(args, "label", NULL));
+            benc_dget_str(args, "label", NULL), group);
     } else {
         tl = tlib_add(hash, mi, mi_size, content,
             benc_dget_str(args, "name", NULL),
-            benc_dget_str(args, "label", NULL));
+            benc_dget_str(args, "label", NULL), group);
     }
     return write_add_buffer(cli, tl->num);
 }
@@ -418,6 +432,8 @@ cmd_rate(struct cli *cli, int argc, const char *args)
     net_bw_limit_out = up;
     net_bw_limit_in  = down;
     ul_set_max_uploads();
+    // Make sure we redistribute the bandwidth evenly
+    group_recalculate ();
 
     return write_code_buffer(cli, IPC_OK);
 }
@@ -433,6 +449,70 @@ cmd_die(struct cli *cli, int argc, const char *args)
     return err;
 }
 
+
+
+// Place torrent in a different group
+
+static int
+cmd_setgroup(struct cli *cli, int argc, const char *args)
+{
+    struct tlib *tl = NULL;
+    const char *group = NULL;
+    const char *p = NULL;
+
+    // We need 1 argument: a list with the torrent number/hash and the name
+    if (argc != 1 || !benc_isdct(args))
+    {
+        return write_code_buffer(cli, IPC_COMMERR);
+    }
+
+    p = benc_dget_any(args, "torrent");
+    if (NULL == p)
+    {
+        return write_code_buffer(cli, IPC_COMMERR);
+    }
+    if (benc_isint(p))
+    {
+        tl = tlib_by_num(benc_int(p, &p));
+    }
+    else if (benc_isstr(p))
+    {
+        tl = tlib_by_hash(benc_mem(p, NULL, &p));
+    }
+
+    if (NULL == tl)
+    {
+        return write_code_buffer(cli, IPC_ENOTENT);
+    }
+
+    // Note: dget_str returns a copy of the name
+    group = benc_dget_str (args, "group", NULL);
+    if (NULL == group)
+    {
+        return write_code_buffer(cli, IPC_COMMERR);
+    }
+
+    // Lookup group; if not found, this is an error. The user must explicitly use / to use the rootgroup.
+    struct group *gr = group_by_name (group);
+    if (NULL == gr)
+    {
+        return write_code_buffer(cli, IPC_ENOGROUP);
+    }
+
+    btpd_log(BTPD_L_BTPD, "Placing torrent '%s' in group '%s'.\n", tl->name, group);
+    // Save information in 'info' file on disk, even if this torrent is inactive.
+    tlib_setgroup(tl, group);
+
+    // Link torrent to new group; however, if a torrent is inactive there is no torrent strcture
+    if (NULL != tl->tp)
+    {
+      tl->tp->group = gr;
+    }
+    
+    return write_code_buffer(cli, IPC_OK);
+}
+
+
 static struct {
     const char *name;
     int nlen;
@@ -442,6 +522,7 @@ static struct {
     { "del",    3, cmd_del },
     { "die",    3, cmd_die },
     { "rate",   4, cmd_rate },
+    { "setgroup", 8, cmd_setgroup },
     { "start",  5, cmd_start },
     { "start-all", 9, cmd_start_all},
     { "stop",   4, cmd_stop },

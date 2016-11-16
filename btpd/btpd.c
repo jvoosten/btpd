@@ -124,11 +124,17 @@ btpd_init(void)
     td_init();
     addrinfo_init();
     net_init();
+    group_init();
+    if (NULL != group_ratios)
+    {
+      group_parse_ratios (group_ratios);
+    }
     ipc_init();
     ul_init();
     cm_init();
     tr_init();
     tlib_init();
+    group_recalculate ();
 
     evtimer_init(&m_heartbeat, heartbeat_cb, NULL);
     btpd_timer_add(&m_heartbeat, (& (struct timespec) { 1, 0 }));

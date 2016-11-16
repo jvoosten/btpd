@@ -24,6 +24,7 @@ struct net {
     unsigned npeers;
     struct peer_tq peers;
     struct mptbl *mptbl;
+    struct group *group;
 };
 
 enum input_state {

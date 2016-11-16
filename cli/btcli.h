@@ -51,5 +51,7 @@ void usage_start(void);
 void cmd_start(int argc, char **argv);
 void usage_stop(void);
 void cmd_stop(int argc, char **argv);
+void usage_setgroup(void);
+void cmd_setgroup(int argc, char **argv);
 
 #endif

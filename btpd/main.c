@@ -162,7 +162,12 @@ usage(void)
         "\n"
         "--numwant n\n"
         "\tSet the number of peers to fetch on each request. Default is 50.\n"
-        "\n");
+        "\n"
+        "--groups groupspec1[,groupspec2[,...]]\n"
+        "\tSpecify bandwidth groups. A groupspec consists of a name, followed by\n"
+        "\ta colon, followed by an integer.\n"
+        "\n"
+      );
     exit(1);
 }
 
@@ -182,6 +187,7 @@ static struct option longopts[] = {
     { "ip", required_argument,          &longval,       10 },
     { "logmask", required_argument,     &longval,       11 },
     { "numwant", required_argument,     &longval,       12 },
+    { "groups", required_argument,      &longval,       13 },
     { "help",   no_argument,            &longval,       128 },
     { NULL,     0,                      NULL,           0 }
 };
@@ -245,6 +251,9 @@ main(int argc, char **argv)
                 break;
             case 12:
                 net_numwant = (unsigned)atoi(optarg);
+                break;
+            case 13:
+                group_ratios = strdup (optarg);
                 break;
             default:
                 usage();

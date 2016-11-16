@@ -15,6 +15,7 @@ ERRDEF(ESHUTDOWN,       "btpd is shutting down")
 ERRDEF(ETACTIVE,        "torrent is active")
 ERRDEF(ETENTEXIST,      "torrent entry exists")
 ERRDEF(ETINACTIVE,      "torrent is inactive")
+ERRDEF(ENOGROUP,        "group not found")
 #ifdef __IPCE
 #undef __IPCE
 #undef ERRDEF

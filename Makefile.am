@@ -20,6 +20,7 @@ btpd_btpd_SOURCES=\
 	btpd/net_buf.c btpd/net_buf.h\
 	btpd/opts.c btpd/opts.h\
 	btpd/peer.c btpd/peer.h\
+	btpd/group.c btpd/group.h\
 	btpd/thread_cb.c btpd/tlib.c btpd/tlib.h btpd/torrent.c btpd/torrent.h\
 	btpd/tracker_req.c btpd/tracker_req.h\
 	btpd/upload.c btpd/upload.h\
@@ -32,7 +33,7 @@ cli_btinfo_SOURCES=cli/btinfo.c
 cli_btinfo_LDADD=misc/libmisc.a -lcrypto -lm
 
 # btcli
-cli_btcli_SOURCES=cli/btcli.c cli/btcli.h cli/add.c cli/del.c cli/list.c cli/rate.c cli/kill.c cli/start.c cli/stop.c cli/stat.c
+cli_btcli_SOURCES=cli/btcli.c cli/btcli.h cli/add.c cli/del.c cli/list.c cli/rate.c cli/kill.c cli/start.c cli/stop.c cli/stat.c cli/setgroup.c
 cli_btcli_LDADD=misc/libmisc.a -lcrypto -lm @INETLIBS@
 
 # libmisc

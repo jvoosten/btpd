@@ -4,7 +4,6 @@
 #include <netdb.h>
 
 static unsigned long m_bw_bytes_in;
-static unsigned long m_bw_bytes_out;
 
 static unsigned long m_rate_up;
 static unsigned long m_rate_dwn;
@@ -566,8 +565,8 @@ net_bw_tick(void)
 {
     struct peer *p;
 
-    m_bw_bytes_out = net_bw_limit_out;
     m_bw_bytes_in = net_bw_limit_in;
+    group_reset_bw();
 
     if (net_bw_limit_in > 0) {
         while ((p = BTPDQ_FIRST(&net_bw_readq)) != NULL && m_bw_bytes_in > 0) {
@@ -585,13 +584,24 @@ net_bw_tick(void)
         }
     }
 
-    if (net_bw_limit_out) {
-        while (((p = BTPDQ_FIRST(&net_bw_writeq)) != NULL
-                   && m_bw_bytes_out > 0)) {
+    // Rate the output according to the group's ratio
+    if (net_bw_limit_out > 0) {
+        struct group *gr = NULL;
+        p = BTPDQ_FIRST(&net_bw_writeq);
+        while (p != NULL)
+        {
+            // Go back all the way to the torrent's group
+            gr = p->n->tp->group;
+            if (gr->bw_bytes_out <= 0)
+            {
+              break; // Nothing left
+            }
+
             BTPDQ_REMOVE(&net_bw_writeq, p, wq_entry);
             btpd_ev_enable(&p->ioev, EV_WRITE);
             p->mp->flags &= ~PF_ON_WRITEQ;
-            m_bw_bytes_out -=  net_write(p, m_bw_bytes_out);
+            gr->bw_bytes_out -=  net_write(p, gr->bw_bytes_out);
+            p = BTPDQ_FIRST (&net_bw_writeq);
         }
     } else {
         while ((p = BTPDQ_FIRST(&net_bw_writeq)) != NULL) {
@@ -642,10 +652,11 @@ net_read_cb(struct peer *p)
 static void
 net_write_cb(struct peer *p)
 {
+  struct group *gr = p->n->tp->group;
     if (net_bw_limit_out == 0)
         net_write(p, 0);
-    else if (m_bw_bytes_out > 0)
-        m_bw_bytes_out -= net_write(p, m_bw_bytes_out);
+    else if (gr->bw_bytes_out > 0)
+        gr->bw_bytes_out -= net_write(p, gr->bw_bytes_out);
     else {
         btpd_ev_disable(&p->ioev, EV_WRITE);
         p->mp->flags |= PF_ON_WRITEQ;
@@ -691,7 +702,7 @@ net_shutdown(void)
 void
 net_init(void)
 {
-    m_bw_bytes_out = net_bw_limit_out;
+    group_reset_bw ();
     m_bw_bytes_in = net_bw_limit_in;
 
     int safe_fds = getdtablesize() * 4 / 5;
