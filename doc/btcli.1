@@ -29,6 +29,8 @@ One of the following operations must be specified when running btcli:
 .TP
 \fBrate\fR \- Set the global up and download rates in KB/s.
 .TP
+\fBsetgroup\fR \- Set the bandwidth group for the torrent.
+.TP
 \fBstart\fR \- Activate torrents.
 .TP
 \fBstat\fR \- Display stats for active torrents.
@@ -54,6 +56,9 @@ Specifies the name to be displayed for this torrent.
 .TP
 \fB\-l\fR label
 Set the label to associate with torrent.
+.TP
+\fB\-g\fR group
+Set the bandwidth group for the torrent (see \fBbtpd --groups\fR).
 .SH "LIST OPTIONS"
 .TP
 \fB\-a\fR
@@ -236,6 +241,12 @@ Set the global upload rate to 20KB/s and download rate to 1MB/s.
 .br
 .RS 4
 .B $ btcli rate 20K 1M
+.RE
+.PP
+Set the bandwidth group for a torrent
+.br
+.RS 4
+.B $ btcli setgroup slow bar.torrent
 .RE
 .PP
 Shut down btpd.

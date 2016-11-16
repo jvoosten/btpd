@@ -89,6 +89,15 @@ Preallocate disk space in chunks of \fIn\fR kB. Default is 2048.  Note that \fIn
 .TP
 .B \-\-numwant \fIn\fR
 Specify the number of wanted peers 'numwant' tracker request parameter. Default is 50.
+.TP
+.B \-\-groups \fIgroupspec\fR[,\fIgroupspec\fR[\fI,...\fR]]
+Specify bandwidth groups. A bandwidth group consists of a name, followed by a colon, followed by a percentage. Each group is allocated the percentage of available bandwidth on both in- and outgoing traffic.
+.br
+There is a special rootgroup which gets allocated the remainder of the bandwidth with a minimum of 10%. If the sum of percentages exceeds 90%, 10% is still allocated to the root group and the remaining 90% is divided between the groups according to their ratio.
+.br
+A torrent can be placed in a group to prevent it taking up too much bandwidth; a torrent with no group (or its group cannot be found) is placed in the root group. See also \fBbtcli add\fR and \fBbtcli setgroup\fR.
+.br
+This function is only really useful with \fI\-\-bw\-out\fR and/or \fI\-\-bw\-in\fR. It is also similar to the \fBrate\fR command of btcli, but does not require you to calculate the rate yourself.
 .SH "STARTING BTPD"
 To start btpd with default settings you only need to run it. However, there are many useful options you may want to use. To see a full list run \fBbtpd \-\-help\fR. If you didn't specify otherwise,  btpd starts with the same set of active torrents as it had the last time it was shut down.
 .PP
@@ -117,6 +126,13 @@ Start btpd and make it listen on port 12345, limit outgoing bandwidth to 200kB/s
 .RS 4
 .nf
 .B $ btpd \-p 12345 \-\-bw\-out 200 \-\-max\-peers 40 \-\-empty\-start
+.fi
+.RE
+.PP
+Start btpd with 2 extra bandwidth groups, a slow one with 20% bandwidth and a fast one with 50%; the remaining 30% will be allocated to the root group.
+.RS 4
+.nf
+.B $ btpd --groups slow:20,fast:50
 .fi
 .RE
 .SH "TROUBLESHOOTING"
