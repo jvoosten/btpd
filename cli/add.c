@@ -65,7 +65,7 @@ cmd_add(int argc, char **argv)
             break;
         case 'l':
             glabel = optarg;
-            if ((labellen = strlen(dir)) == 0)
+            if ((labellen = strlen(glabel)) == 0)
                 diemsg("bad option value for -l.\n");
             break;
         case 'n':
