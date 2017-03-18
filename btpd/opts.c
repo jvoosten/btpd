@@ -15,3 +15,4 @@ int net_ipv4 = 1;
 int net_ipv6 = 0;
 unsigned net_numwant = 50;
 char *group_ratios = NULL;
+int do_fsync = 1; // If true, force updates to torrents to disk with fsync(); otherwise depend on regular updates by the kernel.

@@ -98,6 +98,11 @@ There is a special rootgroup which gets allocated the remainder of the bandwidth
 A torrent can be placed in a group to prevent it taking up too much bandwidth; a torrent with no group (or its group cannot be found) is placed in the root group. See also \fBbtcli add\fR and \fBbtcli setgroup\fR.
 .br
 This function is only really useful with \fI\-\-bw\-out\fR and/or \fI\-\-bw\-in\fR. It is also similar to the \fBrate\fR command of btcli, but does not require you to calculate the rate yourself.
+.TP
+.B \-\-no\-fsync
+Do not use call fsync() to force updates to the torrent status to disk.
+.br
+Btpd normally tries very hard to make sure the statistics of the torrents are written to disk (e.g. what parts have been downloaded, upload ratio, etc). However the use of fsync() may cause excessive wear on your harddisk or SSD if you have more than a few dozen torrents. This option disabled the call to fsync, at a tiny risk of having some statistics lost.
 .SH "STARTING BTPD"
 To start btpd with default settings you only need to run it. However, there are many useful options you may want to use. To see a full list run \fBbtpd \-\-help\fR. If you didn't specify otherwise,  btpd starts with the same set of active torrents as it had the last time it was shut down.
 .PP

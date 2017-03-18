@@ -167,6 +167,9 @@ usage(void)
         "\tSpecify bandwidth groups. A groupspec consists of a name, followed by\n"
         "\ta colon, followed by an integer.\n"
         "\n"
+        "--no-fsync\n"
+        "\tDo not fsync() writes to the status information of torrents.\n"
+        "\n"
       );
     exit(1);
 }
@@ -188,6 +191,7 @@ static struct option longopts[] = {
     { "logmask", required_argument,     &longval,       11 },
     { "numwant", required_argument,     &longval,       12 },
     { "groups", required_argument,      &longval,       13 },
+    { "no-fsync", no_argument,          &longval,       14 },
     { "help",   no_argument,            &longval,       128 },
     { NULL,     0,                      NULL,           0 }
 };
@@ -254,6 +258,9 @@ main(int argc, char **argv)
                 break;
             case 13:
                 group_ratios = strdup (optarg);
+                break;
+            case 14:
+                do_fsync = 0;
                 break;
             default:
                 usage();

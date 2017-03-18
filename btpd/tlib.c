@@ -217,8 +217,11 @@ save_info(struct tlib *tl)
         btpd_err("failed to open '%s' (%s).\n", wpath, strerror(errno));
     dct_subst_save(fp, "de", iob.buf);
     iobuf_free(&iob);
-    if ((fflush(fp) == EOF || fsync(fileno(fp)) != 0
-            || ferror(fp) || fclose(fp) != 0))
+
+    // Write to disk; if any errors occurs log it. The fsync() is optional.
+    if (fflush(fp) == EOF || 
+            (do_fsync && fsync(fileno(fp)) != 0)
+            || ferror(fp) || fclose(fp) != 0)
         btpd_err("failed to write '%s'.\n", wpath);
     if (rename(wpath, path) != 0)
         btpd_err("failed to rename: '%s' -> '%s' (%s).\n", wpath, path,

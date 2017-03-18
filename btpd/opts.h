@@ -15,5 +15,5 @@ extern const char *tr_ip_arg;
 extern int net_ipv4, net_ipv6;
 extern unsigned net_numwant;
 extern char *group_ratios;
-
+extern int do_fsync;
 #endif
